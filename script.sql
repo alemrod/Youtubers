@@ -87,33 +87,67 @@
 -- 	--python: red = f'Oi, {v_nome}. {v_saudacao}.';
 -- END;
 -- $$
-rr
---cursor vinculado (bound)
---exibir nome do canal concatenado a seu numero de inscritos
---mais um bloquinho anonimo
+-- --cursor vinculado (bound)
+-- --exibir nome do canal concatenado a seu numero de inscritos
+-- --mais um bloquinho anonimo
+-- DO $$
+-- 	DECLARE
+-- 		-- cursor bound (vinculado)
+-- 		--1. Declaracao (ainda não esta aberto)
+-- 		cur_nomes_e_inscritos CURSOR FOR
+-- 		SELECT youtuber, subscribers FROM tb_youtubers;
+-- 		tupla RECORD;
+-- 		--tupla.youtuber me da o youtuber
+-- 		--tupla.subscribers me da o numero de subscribers
+-- 		resultado TEXT DEFAULT '';
+-- 	BEGIN
+-- 		--2. Abertura do cursor
+-- 		OPEN cur_nomes_e_inscritos;
+-- 		--vamos usar um loop WHILE
+-- 		--3. Recuperacao de dados
+-- 		FETCH cur_nomes_e_inscritos INTO tupla;
+-- 		WHILE FOUND LOOP
+-- 			--concatenacao, operado ||
+-- 			resultado := resultado ||':'|| tupla.youtuber ||':'|| tupla.subscribers || ',';
+-- 			FETCH cur_nomes_e_inscritos INTO tupla;
+-- 		END LOOP;
+-- 		--4. Fechamento
+-- 		CLOSE cur_nomes_e_inscritos;
+-- 		RAISE NOTICE '%', resultado;
+-- 	END;
+-- $$
+
+
+--cursor com parametro nomeado e por ordem
+--exibir nomes dos youtubers que comecaram a partir de 2010
+--e que tem, pelo menos, 60m inscritos
+-- mais um bloquinho anonimo
 DO $$
 	DECLARE
-		-- cursor bound (vinculado)
-		--1. Declaracao (ainda não esta aberto)
-		cur_nomes_e_inscritos CURSOR FOR
-		SELECT youtuber, subscribers FROM tb_youtubers;
-		tupla RECORD;
-		--tupla.youtuber me da o youtuber
-		--tupla.subscribers me da o numero de subscribers
-		resultado TEXT DEFAULT '';
+		v_ano INT := 2010;
+		v_inscritos INT := 60000000;
+		--1. Declaracao do cursor
+		cur_ano_inscritos CURSOR(ano INT, inscritos INT) FOR
+		SELECT youtuber FROM tb_youtubers WHERE started >=ano AND subscribers >= inscritos;
+		v_youtuber VARCHAR(200);
 	BEGIN
 		--2. Abertura do cursor
-		OPEN cur_nomes_e_inscritos;
-		--vamos usar um loop WHILE
-		--3. Recuperacao de dados
-		FETCH cur_nomes_e_inscritos INTO tupla;
-		WHILE FOUND LOOP
-			--concatenacao, operado ||
-			resultado := resultado ||':'|| tupla.youtuber ||':'|| tupla.subscribers || ',';
-			FETCH cur_nomes_e_inscritos INTO tupla;
+		--essa, passando argumentos pela ordem
+		--OPEN cur_ano_inscritos(v_ano, v_inscritos);
+		--ou essa, passando argumentos pelo nome, invertendo a ordem
+		--OPEN cur_ano_inscritos(inscritos := v_inscritos, ano := v_ano);
+		--ou essa, passando argumentos pelo nome, mantendo a ordem
+		OPEN cur_ano_inscritos(ano := v_ano, inscritos := v_inscritos);
+		LOOP
+		--buscar o nome
+		--3. Recuperação
+		FETCH cur_ano_inscritos INTO v_youtuber;
+		--sair, se for o caso
+		EXIT WHEN NOT FOUND;
+		--exibir, se puder
+		RAISE NOTICE '%', v_youtuber;
 		END LOOP;
 		--4. Fechamento
-		CLOSE cur_nomes_e_inscritos;
-		RAISE NOTICE '%', resultado;
+		CLOSE cur_ano_inscritos;
 	END;
 $$
